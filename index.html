@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Meva Nevera - Llista Compartida</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome per a icones modernes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <i class="fa-solid fa-basket-shopping text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-white leading-tight">La Nevera</h1>
+                    <p class="text-xs text-slate-400 flex items-center gap-1.5">
+                        <span id="estat-connexio" class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> 
+                        <span id="text-connexio">Connectant...</span>
+                    </p>
+                </div>
+            </div>
+            <button onclick="netejarComprats()" title="Netejar comprats" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition-colors border border-slate-700/50 flex items-center gap-1.5">
+                <i class="fa-solid fa-trash-can text-slate-400"></i> Netejar
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-md mx-auto w-full px-4 py-6 flex-grow flex flex-col gap-6">
+
+        <!-- Formulari d'Afegir Producte -->
+        <section class="bg-slate-900 border border-slate-800/80 rounded-2xl p-4 shadow-xl shadow-black/40">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-plus text-emerald-400"></i> Afegir nou producte
+            </h2>
+            <form id="form-afegir" onsubmit="afegirProducte(event)" class="flex gap-2">
+                <div class="relative flex-grow">
+                    <input type="text" id="nom-producte" placeholder="Ex: Llet, Ous, Tomàquets..." required
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all">
+                </div>
+                <input type="number" id="quantitat-producte" value="1" min="1" max="99" title="Quantitat"
+                    class="w-16 bg-slate-950 border border-slate-800 rounded-xl px-3 py-3 text-sm text-center text-slate-100 focus:outline-none focus:border-emerald-500 transition-all">
+                <button type="submit" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-plus text-base"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- Secció de Productes Suggerits (Més freqüents) -->
+        <section id="seccio-freqüents" class="hidden">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Més afegits habitualment
+                </h2>
+            </div>
+            <div id="llista-freqüents" class="flex flex-wrap gap-2">
+                <!-- S'omplirà dinàmicament amb JS -->
+            </div>
+        </section>
+
+        <!-- Llista de la Compra -->
+        <section class="flex-grow flex flex-col">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check text-emerald-400"></i> Productes pendents
+                </h2>
+                <span id="comptador-productes" class="text-xs bg-slate-800 text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-700/50">0 items</span>
+            </div>
+
+            <!-- Contenidor de la llista -->
+            <div id="llista-productes" class="space-y-2.5">
+                <!-- Estat buit -->
+                <div id="estat-buit" class="text-center py-12 px-4 border border-dashed border-slate-800 rounded-2xl bg-slate-900/30">
+                    <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-600">
+                        <i class="fa-solid fa-basket-shopping text-xl"></i>
+                    </div>
+                    <p class="text-sm font-medium text-slate-300">La llista està buida</p>
+                    <p class="text-xs text-slate-500 mt-1">Afegeix productes a sobre per començar.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer / Missatge informatiu -->
+    <footer class="border-t border-slate-800 bg-slate-900/40 py-3 text-center text-xs text-slate-500">
+        Llista sincronitzada a temps real per a tota la família.
+    </footer>
+
+    <!-- Firebase SDK & Codi lògic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURACIÓ DE FIREBASE INTEGRADA
+        const firebaseConfig = {
+            apiKey: "AIzaSyA9Sb26Iws3CluPLh1UH-6Ug8PYbovTAqU",
+            authDomain: "llista-compra-a3093.firebaseapp.com",
+            projectId: "llista-compra-a3093",
+            storageBucket: "llista-compra-a3093.firebasestorage.app",
+            messagingSenderId: "18711464066",
+            appId: "1:18711464066:web:dadf70d610b25cb27dcc9b"
+        };
+
+        // Inicialitzar Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let productes = [];
+        let historial = {};
+
+        // Actualitzar estat visual de connexió
+        document.getElementById('estat-connexio').className = "w-2 h-2 rounded-full bg-emerald-400 inline-block";
+        document.getElementById('text-connexio').textContent = "Sincronitzat";
+
+        // Escoltar canvis a temps real de Firestore
+        const q = query(collection(db, "productes_nevera"));
+        onSnapshot(q, (snapshot) => {
+            productes = [];
+            historial = {};
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                productes.push({
+                    id: docSnap.id,
+                    nom: data.nom,
+                    quantitat: data.quantitat || 1,
+                    comprat: data.comprat || false,
+                    createdAt: data.createdAt || Date.now()
+                });
+
+                const clau = data.nom.toLowerCase();
+                historial[clau] = (historial[clau] || 0) + 1;
+            });
+
+            renderitzarLlista();
+            renderitzarFreqüents();
+        }, (error) => {
+            console.error("Error de connexió Firestore:", error);
+            document.getElementById('estat-connexio').className = "w-2 h-2 rounded-full bg-rose-500 inline-block";
+            document.getElementById('text-connexio').textContent = "Error de connexió";
+        });
+
+        window.afegirProducte = async function(event) {
+            event.preventDefault();
+            const inputNom = document.getElementById('nom-producte');
+            const inputQuantitat = document.getElementById('quantitat-producte');
+            
+            const nom = inputNom.value.trim();
+            const quantitat = parseInt(inputQuantitat.value) || 1;
+
+            if (!nom) return;
+
+            const nomNormalitzat = nom.charAt(0).toUpperCase() + nom.slice(1).toLowerCase();
+            const existent = productes.find(p => p.nom.toLowerCase() === nomNormalitzat.toLowerCase() && !p.comprat);
+            
+            try {
+                if (existent) {
+                    await updateDoc(doc(db, "productes_nevera", existent.id), {
+                        quantitat: existent.quantitat + quantitat
+                    });
+                } else {
+                    await addDoc(collection(db, "productes_nevera"), {
+                        nom: nomNormalitzat,
+                        quantitat: quantitat,
+                        comprat: false,
+                        createdAt: serverTimestamp()
+                    });
+                }
+                inputNom.value = '';
+                inputQuantitat.value = '1';
+                inputNom.focus();
+            } catch (e) {
+                console.error("Error en afegir producte:", e);
+            }
+        };
+
+        window.afegirFreqüent = async function(nom) {
+            const existent = productes.find(p => p.nom.toLowerCase() === nom.toLowerCase() && !p.comprat);
+            try {
+                if (existent) {
+                    await updateDoc(doc(db, "productes_nevera", existent.id), {
+                        quantitat: existent.quantitat + 1
+                    });
+                } else {
+                    await addDoc(collection(db, "productes_nevera"), {
+                        nom: nom,
+                        quantitat: 1,
+                        comprat: false,
+                        createdAt: serverTimestamp()
+                    });
+                }
+            } catch (e) {
+                console.error("Error en afegir freqüent:", e);
+            }
+        };
+
+        window.alternarComprat = async function(id) {
+            const producte = productes.find(p => p.id === id);
+            if (producte) {
+                try {
+                    await updateDoc(doc(db, "productes_nevera", id), {
+                        comprat: !producte.comprat
+                    });
+                } catch (e) {
+                    console.error("Error en actualitzar estat:", e);
+                }
+            }
+        };
+
+        window.eliminarProducte = async function(id) {
+            try {
+                await deleteDoc(doc(db, "productes_nevera", id));
+            } catch (e) {
+                console.error("Error en eliminar:", e);
+            }
+        };
+
+        window.netejarComprats = async function() {
+            try {
+                const comprats = productes.filter(p => p.comprat);
+                for (const p of comprats) {
+                    await deleteDoc(doc(db, "productes_nevera", p.id));
+                }
+            } catch (e) {
+                console.error("Error en netejar comprats:", e);
+            }
+        };
+
+        function renderitzarFreqüents() {
+            const seccio = document.getElementById('seccio-freqüents');
+            const contenidor = document.getElementById('llista-freqüents');
+            
+            const ordenats = Object.entries(historial).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            if (ordenats.length === 0) {
+                seccio.classList.add('hidden');
+                return;
+            }
+
+            seccio.classList.remove('hidden');
+            contenidor.innerHTML = '';
+
+            ordenats.forEach(([nomClau]) => {
+                const nomBonic = nomClau.charAt(0).toUpperCase() + nomClau.slice(1);
+                const boto = document.createElement('button');
+                boto.type = 'button';
+                boto.onclick = () => afegirFreqüent(nomBonic);
+                boto.className = "bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-emerald-500/50 text-xs px-3 py-2 rounded-xl transition-all flex items-center gap-1.5 shadow-sm active:scale-95";
+                boto.innerHTML = `<i class="fa-solid fa-plus text-emerald-400 text-[10px]"></i> ${nomBonic}`;
+                contenidor.appendChild(boto);
+            });
+        }
+
+        function renderitzarLlista() {
+            const contenidor = document.getElementById('llista-productes');
+            const comptador = document.getElementById('comptador-productes');
+            const estatBuit = document.getElementById('estat-buit');
+
+            comptador.textContent = `${productes.filter(p => !p.comprat).length} pendents`;
+
+            if (productes.length === 0) {
+                contenidor.innerHTML = '';
+                contenidor.appendChild(estatBuit);
+                estatBuit.classList.remove('hidden');
+                return;
+            }
+
+            estatBuit.classList.add('hidden');
+            contenidor.innerHTML = '';
+
+            const productesOrdenats = [...productes].sort((a, b) => a.comprat - b.comprat);
+
+            productesOrdenats.forEach(p => {
+                const element = document.createElement('div');
+                element.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+                    p.comprat 
+                        ? 'bg-slate-900/30 border-slate-900 opacity-60' 
+                        : 'bg-slate-900 border-slate-800/80 shadow-sm'
+                }`;
+
+                element.innerHTML = `
+                    <div class="flex items-center gap-3 flex-grow cursor-pointer" onclick="alternarComprat('${p.id}')">
+                        <div class="w-6 h-6 rounded-lg border flex items-center justify-center transition-all ${
+                            p.comprat ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-700 bg-slate-950 text-transparent'
+                        }">
+                            <i class="fa-solid fa-check text-xs"></i>
+                        </div>
+                        <span class="text-sm font-medium ${p.comprat ? 'line-through text-slate-500' : 'text-slate-200'}">
+                            ${p.nom}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-semibold px-2 py-1 rounded-md bg-slate-950 border border-slate-800 text-slate-400">
+                            x${p.quantitat}
+                        </span>
+                        <button onclick="eliminarProducte('${p.id}')" class="text-slate-600 hover:text-rose-400 p-1 rounded-lg transition-colors" title="Eliminar">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                contenidor.appendChild(element);
+            });
+        }
+    </script>
+</body>
+</html>
